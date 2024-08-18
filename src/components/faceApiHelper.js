@@ -1,6 +1,6 @@
 // faceApiHelper.js
 import * as faceapi from 'face-api.js';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
 // Load face-api.js models
@@ -21,15 +21,31 @@ export const detectFace = async (imageElement) => {
 };
 
 // Register the face in Firestore
-export const registerFace = async (name, mobileNumber, descriptor) => {
+export const registerFace = async (name, mobileNumber, amount_pending, descriptor) => {
   try {
     await addDoc(collection(db, 'users'), {
       name,
       mobileNumber,
+      amount_pending,
       faceDescriptor: Array.from(descriptor),  // Convert Float32Array to array
     });
     alert('Face registered successfully!');
   } catch (e) {
     console.error('Error adding document: ', e);
   }
+};
+
+// Fetch registered faces from Firestore
+export const getRegisteredFaces = async () => {
+  const snapshot = await getDocs(collection(db, 'users'));
+  const registeredFaces = [];
+  snapshot.forEach((doc) => {
+    registeredFaces.push({
+      name: doc.data().name,
+      mobileNumber: doc.data().mobileNumber,
+      amount_pending: doc.data().amount_pending,
+      faceDescriptor: new Float32Array(doc.data().faceDescriptor),
+    });
+  });
+  return registeredFaces;
 };
